@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intern Dashboard - Slash Experiences</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #2CB67D;
+            --bg-color: #1e1e2e;
+            --card-bg: rgba(30, 30, 46, 0.9);
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #6366f1, #4f46e5, #2CB67D, #7F5AF0);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            margin-right: 1rem;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .task-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .task-status.not-started { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+        .task-status.in-progress { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .task-status.completed { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .task-status.blocked { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .notice-board {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notice {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 1rem;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+            }
+
+            body {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="flex items-center mb-8">
+            <h2 class="text-xl font-bold">Slash Experiences</h2>
+        </div>
+        
+        <nav class="flex-1">
+            <div class="nav-item active" data-section="dashboard">
+                <i data-feather="grid"></i>
+                Dashboard
+            </div>
+            <div class="nav-item" data-section="team">
+                <i data-feather="users"></i>
+                Team
+            </div>
+            <div class="nav-item" data-section="notices">
+                <i data-feather="message-square"></i>
+                Notice Board
+            </div>
+            <div class="nav-item" data-section="calendar">
+                    <i data-feather="calendar"></i>
+                    Calendar
+            </div>
+            </nav>
+
+        <div class="mt-auto pt-4 border-t border-gray-700">
+            <div class="text-sm text-gray-400 mb-2">Logged in as</div>
+            <div class="font-medium mb-4" id="userName">Intern</div>
+            <button onclick="auth.logout()" class="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-300">
+                    Logout
+                </button>
+            </div>
+    </div>
+
+        <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">My Tasks</h3>
+                    <p class="text-3xl font-bold">8</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">Completed</h3>
+                    <p class="text-3xl font-bold text-green-400">2</p>
+                    </div>
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">In Progress</h3>
+                    <p class="text-3xl font-bold text-blue-400">5</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">Blocked</h3>
+                    <p class="text-3xl font-bold text-red-500">1</p>
+                        </div>
+                    </div>
+
+            <!-- Daily Standup Section -->
+            <div class="dashboard-card mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Daily Standup</h2>
+                        <p class="text-sm text-gray-400">Update your status for today's standup</p>
+                    </div>
+                    <a href="https://meet.google.com/xyz-abcd-efg" target="_blank" 
+                        class="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300">
+                        <i data-feather="video" class="w-4 h-4 mr-2"></i>
+                        Join Meet
+                    </a>
+                        </div>
+                <div class="space-y-4">
+                    <div class="standup-form bg-opacity-10 bg-white rounded-lg p-4">
+                        <h3 class="font-medium mb-3">What did you work on yesterday?</h3>
+                        <textarea id="yesterdayWork" class="w-full bg-transparent border border-gray-600 rounded-lg p-3 mb-4" rows="2"></textarea>
+                        
+                        <h3 class="font-medium mb-3">What are you working on today?</h3>
+                        <textarea id="todayWork" class="w-full bg-transparent border border-gray-600 rounded-lg p-3 mb-4" rows="2"></textarea>
+                        
+                        <h3 class="font-medium mb-3">Any blockers?</h3>
+                        <textarea id="blockers" class="w-full bg-transparent border border-gray-600 rounded-lg p-3 mb-4" rows="2"></textarea>
+                        
+                        <div class="flex justify-end">
+                            <button id="submitStandup" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300">
+                                Submit Update
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Tasks Section -->
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">My Tasks</h2>
+                    <div class="flex gap-2">
+                        <select id="taskFilter" class="bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                            <option value="all">All Tasks</option>
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="blocked">Blocked</option>
+                        </select>
+                        <button id="addTask" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300">
+                            Add Task
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Task Categories -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold mb-4">Project Objectives</h3>
+                    <div class="space-y-4">
+                        <!-- AI Prompt Logic Tasks -->
+                        <div class="task-category" data-category="ai-prompt">
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-3">AI Prompt Logic & Output Tuning</h4>
+                                <div class="space-y-3">
+                                    <div class="task-card">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h3 class="font-bold">Design Structured Intake Prompt</h3>
+                                                <p class="text-sm text-gray-400">Due: June 15, 2024</p>
+                    </div>
+                                            <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                                                <option value="not-started">Not Started</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="blocked">Blocked</option>
+                                            </select>
+                                    </div>
+                                        <p class="text-sm text-gray-400">Create prompt system with 5 fields (occasion, vibe, budget, etc.)</p>
+                                    </div>
+                                    <div class="task-card">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h3 class="font-bold">Test Response Quality</h3>
+                                                <p class="text-sm text-gray-400">Due: June 20, 2024</p>
+                                </div>
+                                            <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                                                <option value="not-started">Not Started</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="blocked">Blocked</option>
+                                            </select>
+                                    </div>
+                                        <p class="text-sm text-gray-400">Achieve relevance score >70% from testers</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Experience Database Tasks -->
+                        <div class="task-category" data-category="database">
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-3">Experience Database & Tagging</h4>
+                                <div class="space-y-3">
+                                    <div class="task-card">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h3 class="font-bold">Tag Experiences</h3>
+                                                <p class="text-sm text-gray-400">Due: June 25, 2024</p>
+                    </div>
+                                            <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                                                <option value="not-started">Not Started</option>
+                                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                                <option value="blocked">Blocked</option>
+                            </select>
+                        </div>
+                                        <p class="text-sm text-gray-400">Tag 100+ experiences with metadata (occasion, audience, price)</p>
+                                    </div>
+                                    <div class="task-card">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h3 class="font-bold">Design Database Structure</h3>
+                                                <p class="text-sm text-gray-400">Due: June 18, 2024</p>
+                                            </div>
+                                            <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                                                <option value="not-started">Not Started</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="blocked">Blocked</option>
+                            </select>
+                        </div>
+                                        <p class="text-sm text-gray-400">Complete JSON/CMS structure for experience database</p>
+                                    </div>
+                        </div>
+                    </div>
+                </div>
+
+                        <!-- Growth Tasks -->
+                        <div class="task-category" data-category="growth">
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-3">User Testing & Growth</h4>
+                                <div class="space-y-3">
+                                    <div class="task-card">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h3 class="font-bold">Conduct User Testing</h3>
+                                                <p class="text-sm text-gray-400">Due: June 30, 2024</p>
+                                            </div>
+                                            <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                                                <option value="not-started">Not Started</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="blocked">Blocked</option>
+                                            </select>
+                </div>
+                                        <p class="text-sm text-gray-400">Test with 25 users and collect structured feedback</p>
+                                    </div>
+                                    <div class="task-card">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h3 class="font-bold">Create Demo Videos</h3>
+                                                <p class="text-sm text-gray-400">Due: July 5, 2024</p>
+                                </div>
+                                            <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                                                <option value="not-started">Not Started</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                                <option value="blocked">Blocked</option>
+                                            </select>
+                                </div>
+                                        <p class="text-sm text-gray-400">Produce 2+ reels/demo videos with 1K+ views target</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Task Form -->
+                <div id="addTaskForm" class="hidden mb-6 p-4 border border-gray-700 rounded-lg">
+                    <input type="text" id="taskTitle" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2 mb-4" placeholder="Task Title">
+                    <textarea id="taskDescription" class="w-full bg-transparent border border-gray-600 rounded-lg p-3 mb-4" placeholder="Task Description" rows="2"></textarea>
+                    <div class="flex gap-4 mb-4">
+                        <input type="date" id="taskDueDate" class="bg-transparent border border-gray-600 rounded-lg px-3 py-2">
+                        <select id="taskCategory" class="bg-transparent border border-gray-600 rounded-lg px-3 py-2">
+                            <option value="ai-prompt">AI Prompt Logic</option>
+                            <option value="database">Experience Database</option>
+                            <option value="growth">User Testing & Growth</option>
+                        </select>
+                        <select id="taskStatus" class="bg-transparent border border-gray-600 rounded-lg px-3 py-2">
+                            <option value="not-started">Not Started</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="blocked">Blocked</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button id="cancelAddTask" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors duration-300">Cancel</button>
+                        <button id="submitAddTask" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300">Add Task</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section id="team" class="content-section">
+            <div class="dashboard-card">
+                <h2 class="text-2xl font-bold mb-6">Team Members</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="team-member">
+                        <h3 class="font-bold mb-4">Frontend Team</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>KAUSHAL (2022A1PS0832P)</li>
+                            <li>AMIT MISHRA (2023B2AD0956H)</li>
+                            <li>SAJJAD AHMED KHAN (2023A3PS0181G)</li>
+                            <li>SIDHANT SUBRAMANIAN (2023A3PS0300H)</li>
+                            <li>ROMIR SHETTY (2023B4A70871G)</li>
+                            <li>JAGRUTH DODDA (2023A7PS2013H)</li>
+                            <li>ANANYA PURWAR (2023A7PS0017G)</li>
+                        </ul>
+                    </div>
+                    <div class="team-member">
+                        <h3 class="font-bold mb-4">Backend Team</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>KEERTHIKA MUDDADA (2023A7PS0010H)</li>
+                            <li>MOFASSER ARAFAT MIDDA (2023B1A80965H)</li>
+                            <li>SANVI RAJAN UDHAN (2023A4PS0817H)</li>
+                            <li>PRITHVISH CHANDRAYAN (2023A7PS0014P)</li>
+                            <li>SATVIK ADERLA (2023A7PS0167H)</li>
+                            <li>KOTA ANIRUDH (2023B4A30655H)</li>
+                            <li>ANUSH VISHNOI (2023AAPS0630G)</li>
+                        </ul>
+                    </div>
+                    <div class="team-member">
+                        <h3 class="font-bold mb-4">Design Team</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>ANOUSHKA SINGHI (2023A5PS1181P)</li>
+                            <li>NIKHIL KHEMANI (2023B3A10864G)</li>
+                            <li>ANUBHAV CHOURASIA (2023B4AA0939G)</li>
+                            <li>RISHIT LAVANIA (2023A7PS0446G)</li>
+                            <li>ADITYA ASOPA (2023A3PS1129G)</li>
+                            <li>ANUSHKA PURWAR (2023A5PS1173P)</li>
+                            <li>HONEY BHATIA (2023B1A30680G)</li>
+                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+        </section>
+
+        <!-- Notice Board Section -->
+        <section id="notices" class="content-section">
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Notice Board</h2>
+                    <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300" id="sendMessage">
+                        Send Message
+                    </button>
+                        </div>
+                <div class="notice-form hidden" id="noticeForm">
+                    <textarea class="w-full bg-transparent border border-gray-600 rounded-lg p-3 mb-4" 
+                        placeholder="Type your message here..."></textarea>
+                    <div class="flex justify-end gap-2">
+                        <button class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors duration-300" id="cancelMessage">Cancel</button>
+                        <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300" id="submitMessage">Send</button>
+                    </div>
+                </div>
+                <div class="notice-board space-y-4">
+                    <!-- Notices will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+        <!-- Calendar Section -->
+        <section id="calendar" class="content-section">
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Calendar</h2>
+                    <button id="addEvent" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-500 transition-all duration-300">
+                        + Add Event
+                        </button>
+                    </div>
+
+                <!-- No Events Message -->
+                <div id="noEventsMessage" class="text-center text-gray-400 mb-6">
+                    No meetings or tasks scheduled today.
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="currentMonth" class="text-xl font-semibold">June 2024</h3>
+                        <div class="flex gap-2">
+                            <button id="prevMonth" class="p-2 hover:bg-gray-700 rounded-lg transition-all duration-300">
+                                <i data-feather="chevron-left"></i>
+                                </button>
+                            <button id="nextMonth" class="p-2 hover:bg-gray-700 rounded-lg transition-all duration-300">
+                                <i data-feather="chevron-right"></i>
+                                </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar Header -->
+                    <div class="grid grid-cols-7 gap-1 mb-2">
+                        <div class="text-center text-gray-400 py-2">Sun</div>
+                        <div class="text-center text-gray-400 py-2">Mon</div>
+                        <div class="text-center text-gray-400 py-2">Tue</div>
+                        <div class="text-center text-gray-400 py-2">Wed</div>
+                        <div class="text-center text-gray-400 py-2">Thu</div>
+                        <div class="text-center text-gray-400 py-2">Fri</div>
+                        <div class="text-center text-gray-400 py-2">Sat</div>
+                </div>
+                    
+                    <!-- Calendar Days -->
+                    <div id="calendarDays" class="grid grid-cols-7 gap-1">
+                        <!-- Days will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Upcoming Events -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold mb-4">Upcoming Events</h3>
+                    <div id="upcomingEvents" class="space-y-4">
+                        <!-- Events will be populated here -->
+                        <div class="text-center text-gray-400 py-8">
+                            🎉 You're all caught up!
+                        </div>
+                        </div>
+                        </div>
+
+                <!-- Reminders & Deadlines -->
+                <div class="mt-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold">Reminders & Deadlines</h3>
+                        <button id="startFocusTimer" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-all duration-300">
+                            🧘 Start Focus Timer
+                        </button>
+                    </div>
+                    <div id="reminders" class="space-y-4">
+                        <!-- If no tasks -->
+                        <div id="noTasksMessage" class="text-center text-gray-400 py-8">
+                            Looks like you're free – want to schedule a deep work session?
+                        </div>
+                        <!-- Tasks will be populated here -->
+                    </div>
+                </div>
+    </div>
+
+            <!-- Add Event Modal -->
+            <div id="addEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold">Add Event</h3>
+                        <button class="close-modal text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+                    <form id="addEventForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Event Title</label>
+                            <input type="text" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Date & Time</label>
+                            <input type="datetime-local" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Description</label>
+                            <textarea class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" rows="3"></textarea>
+                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Meeting Link (optional)</label>
+                            <input type="url" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2">
+                </div>
+                        <div class="flex justify-end gap-2 mt-6">
+                            <button type="button" class="close-modal px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-all duration-300">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-all duration-300">
+                                Add Event
+                            </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+            <!-- Focus Timer Modal -->
+            <div id="focusTimerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md text-center">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold">Focus Timer</h3>
+                        <button class="close-modal text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+                    <div class="text-6xl font-bold mb-8" id="focusTimer">25:00</div>
+                    <div class="flex justify-center gap-4">
+                        <button id="startTimer" class="px-6 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white transition-all duration-300">
+                            Start
+                        </button>
+                        <button id="pauseTimer" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-white transition-all duration-300 hidden">
+                            Pause
+                        </button>
+                        <button id="resetTimer" class="px-6 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white transition-all duration-300">
+                            Reset
+                        </button>
+                </div>
+                </div>
+                </div>
+        </section>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+
+        // Navigation
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.content-section');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const sectionId = item.dataset.section;
+                
+                // Remove active class from all items and sections
+                navItems.forEach(nav => nav.classList.remove('active'));
+                sections.forEach(section => section.classList.remove('active'));
+                
+                // Add active class to clicked item and corresponding section
+                item.classList.add('active');
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // Notice board functionality
+        const sendMessageBtn = document.getElementById('sendMessage');
+        const noticeForm = document.getElementById('noticeForm');
+        const cancelMessageBtn = document.getElementById('cancelMessage');
+        const submitMessageBtn = document.getElementById('submitMessage');
+        const noticeBoard = document.querySelector('.notice-board');
+
+        if (sendMessageBtn && noticeForm && cancelMessageBtn && submitMessageBtn && noticeBoard) {
+            sendMessageBtn.addEventListener('click', () => {
+                noticeForm.classList.remove('hidden');
+            });
+
+            cancelMessageBtn.addEventListener('click', () => {
+                noticeForm.classList.add('hidden');
+                noticeForm.querySelector('textarea').value = '';
+            });
+
+            submitMessageBtn.addEventListener('click', () => {
+                const messageText = noticeForm.querySelector('textarea').value.trim();
+                if (messageText) {
+                    const notice = document.createElement('div');
+                    notice.className = 'p-4 border border-gray-700 rounded-lg';
+                    notice.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="font-medium">${user?.name || 'Intern'}</p>
+                                <p class="text-sm text-gray-400">${new Date().toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <p>${messageText}</p>
+                    `;
+                    noticeBoard.insertBefore(notice, noticeBoard.firstChild);
+                    noticeForm.classList.add('hidden');
+                    noticeForm.querySelector('textarea').value = '';
+                }
+            });
+        }
+
+        // Load user data
+        const user = auth.getCurrentUser();
+        if (user) {
+            document.getElementById('userName').textContent = user.name;
+        }
+
+        // Check authentication
+        if (!auth.isAuthenticated() || auth.getCurrentUser().role !== 'intern') {
+            window.location.replace('login.html');
+        }
+
+        // Task Management
+        const addTaskBtn = document.getElementById('addTask');
+        const addTaskForm = document.getElementById('addTaskForm');
+        const taskList = document.getElementById('taskList');
+
+        addTaskBtn.addEventListener('click', () => {
+            addTaskForm.classList.remove('hidden');
+        });
+
+        document.getElementById('cancelAddTask').addEventListener('click', () => {
+            addTaskForm.classList.add('hidden');
+            resetTaskForm();
+        });
+
+        document.getElementById('submitAddTask').addEventListener('click', () => {
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const dueDate = document.getElementById('taskDueDate').value;
+            const category = document.getElementById('taskCategory').value;
+            const status = document.getElementById('taskStatus').value;
+            
+            if (title && description && dueDate) {
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-card';
+                taskCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-bold">${title}</h3>
+                            <p class="text-sm text-gray-400">Due: ${new Date(dueDate).toLocaleDateString()}</p>
+                        </div>
+                        <select class="task-status bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                            <option value="not-started" ${status === 'not-started' ? 'selected' : ''}>Not Started</option>
+                            <option value="in-progress" ${status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="completed" ${status === 'completed' ? 'selected' : ''}>Completed</option>
+                            <option value="blocked" ${status === 'blocked' ? 'selected' : ''}>Blocked</option>
+                        </select>
+                    </div>
+                    <p class="text-sm text-gray-400">${description}</p>
+                `;
+                
+                const categoryContainer = document.querySelector(`[data-category="${category}"] .space-y-3`);
+                categoryContainer.appendChild(taskCard);
+                
+                // Reset form and hide it
+                document.getElementById('addTaskForm').classList.add('hidden');
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskDescription').value = '';
+                document.getElementById('taskDueDate').value = '';
+                document.getElementById('taskStatus').value = 'not-started';
+                
+                updateTaskStats();
+            }
+        });
+
+        function resetTaskForm() {
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDescription').value = '';
+            document.getElementById('taskDueDate').value = '';
+            document.getElementById('taskStatus').value = 'not-started';
+        }
+
+        function updateTaskStats() {
+            const tasks = document.querySelectorAll('.task-card:not([style*="display: none"])');
+            let total = tasks.length;
+            let completed = 0;
+            let inProgress = 0;
+            let blocked = 0;
+            
+            tasks.forEach(task => {
+                const status = task.querySelector('.task-status').value;
+                if (status === 'completed') completed++;
+                else if (status === 'in-progress') inProgress++;
+                else if (status === 'blocked') blocked++;
+            });
+            
+            document.querySelector('.stats-card:nth-child(1) .text-3xl').textContent = total;
+            document.querySelector('.stats-card:nth-child(2) .text-3xl').textContent = completed;
+            document.querySelector('.stats-card:nth-child(3) .text-3xl').textContent = inProgress;
+            document.querySelector('.stats-card:nth-child(4) .text-3xl').textContent = blocked;
+        }
+
+        // Task filtering based on category and status
+        document.getElementById('taskFilter').addEventListener('change', (e) => {
+            const filter = e.target.value;
+            const tasks = document.querySelectorAll('.task-card');
+            
+            tasks.forEach(task => {
+                const status = task.querySelector('.task-status').value;
+                if (filter === 'all' || status === filter) {
+                    task.style.display = '';
+                } else {
+                    task.style.display = 'none';
+                }
+            });
+            
+            updateTaskStats();
+        });
+
+        // Daily Standup
+        document.getElementById('submitStandup').addEventListener('click', () => {
+            const yesterday = document.getElementById('yesterdayWork').value.trim();
+            const today = document.getElementById('todayWork').value.trim();
+            const blockers = document.getElementById('blockers').value.trim();
+            
+            if (yesterday && today) {
+                // Here you would typically send this to a backend
+                alert('Standup update submitted successfully!');
+                document.getElementById('yesterdayWork').value = '';
+                document.getElementById('todayWork').value = '';
+                document.getElementById('blockers').value = '';
+            }
+        });
+
+        // Calendar functionality
+        function initializeCalendar() {
+            const today = new Date();
+            let currentMonth = today.getMonth();
+            let currentYear = today.getFullYear();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            
+            function updateCalendar() {
+                const firstDay = new Date(currentYear, currentMonth, 1);
+                const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                const startingDay = firstDay.getDay();
+                const totalDays = lastDay.getDate();
+                
+                document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                const calendarDays = document.getElementById('calendarDays');
+                calendarDays.innerHTML = '';
+                
+                // Add empty cells for days before the first day of the month
+                for (let i = 0; i < startingDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'h-24 bg-gray-800 bg-opacity-50 rounded-lg';
+                    calendarDays.appendChild(emptyDay);
+                }
+                
+                // Add days of the month
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'h-24 bg-gray-800 bg-opacity-50 rounded-lg p-2 transition-all duration-300 hover:bg-opacity-70';
+                    
+                    // Check if this is today
+                    const isToday = today.getDate() === day && 
+                                   today.getMonth() === currentMonth && 
+                                   today.getFullYear() === currentYear;
+                    
+                    if (isToday) {
+                        dayCell.classList.add('bg-blue-600', 'bg-opacity-50');
+                    }
+                    
+                    dayCell.innerHTML = `
+                        <div class="flex justify-between">
+                            <span class="${isToday ? 'text-white font-bold' : ''}">${day}</span>
+                            <button class="add-event-btn hidden text-blue-400 hover:text-blue-300">
+                                <i data-feather="plus-circle" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div class="event-dots mt-1 flex gap-1"></div>
+                    `;
+                    
+                    dayCell.addEventListener('mouseenter', () => {
+                        dayCell.querySelector('.add-event-btn').classList.remove('hidden');
+                    });
+                    
+                    dayCell.addEventListener('mouseleave', () => {
+                        dayCell.querySelector('.add-event-btn').classList.add('hidden');
+                    });
+                    
+                    calendarDays.appendChild(dayCell);
+                }
+                
+                // Initialize Feather icons for the new elements
+                feather.replace();
+            }
+            
+            // Initialize calendar
+            updateCalendar();
+            
+            // Add event listeners for month navigation
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar();
+            });
+            
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar();
+            });
+        }
+
+        // Modal functionality
+        function initializeModals() {
+            const addEventModal = document.getElementById('addEventModal');
+            const focusTimerModal = document.getElementById('focusTimerModal');
+            
+            // Add Event button
+            document.getElementById('addEvent').addEventListener('click', () => {
+                addEventModal.classList.remove('hidden');
+                addEventModal.classList.add('flex');
+            });
+            
+            // Focus Timer button
+            document.getElementById('startFocusTimer').addEventListener('click', () => {
+                focusTimerModal.classList.remove('hidden');
+                focusTimerModal.classList.add('flex');
+            });
+            
+            // Close buttons
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', () => {
+                    addEventModal.classList.add('hidden');
+                    addEventModal.classList.remove('flex');
+                    focusTimerModal.classList.add('hidden');
+                    focusTimerModal.classList.remove('flex');
+                });
+            });
+            
+            // Close on outside click
+            [addEventModal, focusTimerModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }
+                });
+            });
+        }
+
+        // Focus Timer functionality
+        function initializeFocusTimer() {
+            let timeLeft = 25 * 60; // 25 minutes in seconds
+            let timerInterval;
+            const timerDisplay = document.getElementById('focusTimer');
+            const startBtn = document.getElementById('startTimer');
+            const pauseBtn = document.getElementById('pauseTimer');
+            const resetBtn = document.getElementById('resetTimer');
+            
+            function updateTimerDisplay() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            startBtn.addEventListener('click', () => {
+                startBtn.classList.add('hidden');
+                pauseBtn.classList.remove('hidden');
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        alert('Focus session completed!');
+                        timeLeft = 25 * 60;
+                        updateTimerDisplay();
+                        startBtn.classList.remove('hidden');
+                        pauseBtn.classList.add('hidden');
+                    }
+                }, 1000);
+            });
+            
+            pauseBtn.addEventListener('click', () => {
+                clearInterval(timerInterval);
+                startBtn.classList.remove('hidden');
+                pauseBtn.classList.add('hidden');
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                clearInterval(timerInterval);
+                timeLeft = 25 * 60;
+                updateTimerDisplay();
+                startBtn.classList.remove('hidden');
+                pauseBtn.classList.add('hidden');
+            });
+        }
+
+        // Update reminders from tasks
+        function updateReminders() {
+            const reminders = document.getElementById('reminders');
+            const noTasksMessage = document.getElementById('noTasksMessage');
+            const tasks = Array.from(document.querySelectorAll('.task-card')).filter(task => !task.classList.contains('hidden'));
+            
+            if (tasks.length === 0) {
+                noTasksMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noTasksMessage.classList.add('hidden');
+            reminders.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const dueDate = new Date(task.querySelector('.text-sm').textContent.replace('Due: ', ''));
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                let badge = '';
+                if (dueDate.toDateString() === today.toDateString()) {
+                    badge = '<span class="bg-red-500 text-white px-2 py-1 rounded text-xs">Due Today</span>';
+                } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+                    badge = '<span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Due Tomorrow</span>';
+                }
+                
+                const reminder = document.createElement('div');
+                reminder.className = 'bg-gray-800 p-4 rounded-lg shadow';
+                reminder.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-medium">${task.querySelector('.font-bold').textContent}</h4>
+                            <p class="text-sm text-gray-400">${task.querySelector('.text-sm').textContent}</p>
+                        </div>
+                        ${badge}
+                    </div>
+                `;
+                
+                reminders.appendChild(reminder);
+            });
+        }
+
+        // Initialize everything when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCalendar();
+            initializeModals();
+            initializeFocusTimer();
+            updateReminders();
+        });
+    </script>
+</body>
+</html> 

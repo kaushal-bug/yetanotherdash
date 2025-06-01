@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slash Experiences - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        /* Fix cursor visibility */
+        input, button, select, textarea {
+            cursor: pointer !important;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            cursor: text !important;
+        }
+
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(-45deg, #6366f1, #4f46e5, #2CB67D, #7F5AF0);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .login-container {
+            background: rgba(30, 30, 46, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #6366f1, #2CB67D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .login-header p {
+            color: #94a3b8;
+        }
+
+        .login-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer !important;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #6366f1;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #6366f1, #2CB67D);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .login-form {
+            transition: all 0.3s ease;
+        }
+
+        .login-form.hidden {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group svg {
+            position: absolute;
+            left: 1rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer !important;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .primary-btn {
+            background: linear-gradient(45deg, #6366f1, #2CB67D);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #6366f1;
+        }
+
+        .helper-text {
+            display: block;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .link-btn {
+            background: none;
+            border: none;
+            color: #6366f1;
+            font-size: 0.9rem;
+            cursor: pointer !important;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .link-btn:hover {
+            color: #2CB67D;
+            text-decoration: underline;
+        }
+
+        .credentials-list {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .credentials-list h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .credentials-list ul {
+            list-style: none;
+            padding: 0;
+            color: var(--text-muted);
+        }
+
+        .credentials-list li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .credentials-list li:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .login-card h2 {
+            color: #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card p {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="login-page">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Slash Experiences</h1>
+                <p>Welcome back! Please login to your account.</p>
+            </div>
+
+            <div class="login-options">
+                <div class="login-card" data-role="intern">
+                    <div class="card-icon">
+                        <i data-feather="user"></i>
+                    </div>
+                    <h2>Intern</h2>
+                    <p>Access your intern dashboard</p>
+                </div>
+                <div class="login-card" data-role="manager">
+                    <div class="card-icon">
+                        <i data-feather="users"></i>
+                    </div>
+                    <h2>Manager</h2>
+                    <p>Manage your team</p>
+                </div>
+            </div>
+
+            <!-- Intern Login Form -->
+            <form id="internForm" class="login-form hidden">
+                <div class="form-header">
+                    <h2>Intern Login</h2>
+                    <p>Enter your BITS ID and password</p>
+                    <small class="helper-text">Default password is last 4 digits of your BITS ID</small>
+                </div>
+                <div class="form-group">
+                    <label>BITS ID</label>
+                    <div class="input-group">
+                        <i data-feather="user"></i>
+                        <input type="text" name="bitsId" required placeholder="Enter your BITS ID" pattern="^20\d{2}[A-Z]\d[A-Z]{2}\d{4}[A-Z]$" title="Please enter a valid BITS ID format">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group">
+                        <i data-feather="lock"></i>
+                        <input type="password" name="password" required placeholder="Enter your password">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary-btn">Login</button>
+                    <button type="button" class="btn secondary-btn" id="backToRolesIntern">Back</button>
+                </div>
+                <div class="form-footer">
+                    <button type="button" class="link-btn" id="changePasswordBtn">Change Password</button>
+                </div>
+            </form>
+
+            <!-- Manager Login Form -->
+            <form id="managerForm" class="login-form hidden">
+                <div class="form-header">
+                    <h2>Manager Login</h2>
+                    <p>Enter your credentials to continue</p>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-group">
+                        <i data-feather="mail"></i>
+                        <input type="email" name="email" required placeholder="Enter your email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group">
+                        <i data-feather="lock"></i>
+                        <input type="password" name="password" required placeholder="Enter your password">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary-btn">Login</button>
+                    <button type="button" class="btn secondary-btn" id="backToRolesManager">Back</button>
+                </div>
+            </form>
+
+            <!-- Change Password Form -->
+            <form id="changePasswordForm" class="login-form hidden">
+                <div class="form-header">
+                    <h2>Change Password</h2>
+                    <p>Enter your BITS ID and create a new password</p>
+                </div>
+                <div class="form-group">
+                    <label>BITS ID</label>
+                    <div class="input-group">
+                        <i data-feather="user"></i>
+                        <input type="text" name="bitsId" required placeholder="Enter your BITS ID" pattern="^20\d{2}[A-Z]\d[A-Z]{2}\d{4}[A-Z]$">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <div class="input-group">
+                        <i data-feather="lock"></i>
+                        <input type="password" name="currentPassword" required placeholder="Enter current password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <div class="input-group">
+                        <i data-feather="lock"></i>
+                        <input type="password" name="newPassword" required placeholder="Enter new password" minlength="8">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <div class="input-group">
+                        <i data-feather="lock"></i>
+                        <input type="password" name="confirmPassword" required placeholder="Confirm new password">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary-btn">Change Password</button>
+                    <button type="button" class="btn secondary-btn" id="backToLogin">Back to Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+
+        // If already authenticated, redirect to appropriate page
+        if (auth.isAuthenticated()) {
+            const user = auth.getCurrentUser();
+            window.location.href = user.role === 'manager' ? 'manager.html' : 'intern.html';
+        }
+
+        // Mock intern credentials
+        const internCredentials = [
+            { id: '2022A1PS0832P', password: '0832', name: 'KAUSHAL' },
+            { id: '2023B2AD0956H', password: '0956', name: 'AMIT MISHRA' },
+            { id: '2023A3PS0181G', password: '0181', name: 'SAJJAD AHMED KHAN' },
+            { id: '2023A3PS0300H', password: '0300', name: 'SIDHANT SUBRAMANIAN' },
+            { id: '2023B4A70871G', password: '0871', name: 'ROMIR SHETTY' },
+            { id: '2023A7PS2013H', password: '2013', name: 'JAGRUTH DODDA' },
+            { id: '2023A7PS0017G', password: '0017', name: 'ANANYA PURWAR' },
+            { id: '2023A7PS0010H', password: '0010', name: 'KEERTHIKA MUDDADA' },
+            { id: '2023B1A80965H', password: '0965', name: 'MOFASSER ARAFAT MIDDA' },
+            { id: '2023A4PS0817H', password: '0817', name: 'SANVI RAJAN UDHAN' },
+            { id: '2023A7PS0014P', password: '0014', name: 'PRITHVISH CHANDRAYAN' },
+            { id: '2023A7PS0167H', password: '0167', name: 'SATVIK ADERLA' },
+            { id: '2023B4A30655H', password: '0655', name: 'KOTA ANIRUDH' },
+            { id: '2023AAPS0630G', password: '0630', name: 'ANUSH VISHNOI' },
+            { id: '2023A5PS1181P', password: '1181', name: 'ANOUSHKA SINGHI' },
+            { id: '2023B3A10864G', password: '0864', name: 'NIKHIL KHEMANI' },
+            { id: '2023B4AA0939G', password: '0939', name: 'ANUBHAV CHOURASIA' },
+            { id: '2023A7PS0446G', password: '0446', name: 'RISHIT LAVANIA' },
+            { id: '2023A3PS1129G', password: '1129', name: 'ADITYA ASOPA' },
+            { id: '2023A5PS1173P', password: '1173', name: 'ANUSHKA PURWAR' },
+            { id: '2023B1A30680G', password: '0680', name: 'HONEY BHATIA' }
+        ];
+
+        // Manager credentials
+        const managerCredentials = {
+            email: 'kaushal@slashexperiences.com',
+            password: 'admin123'
+        };
+
+        // Role selection
+        document.querySelectorAll('.login-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const role = card.dataset.role;
+                document.querySelector('.login-options').style.display = 'none';
+                if (role === 'intern') {
+                    document.getElementById('internForm').classList.remove('hidden');
+                } else {
+                    document.getElementById('managerForm').classList.remove('hidden');
+                }
+            });
+        });
+
+        // Back buttons
+        document.getElementById('backToRolesIntern').addEventListener('click', () => {
+            document.getElementById('internForm').classList.add('hidden');
+            document.querySelector('.login-options').style.display = 'grid';
+            document.getElementById('internForm').reset();
+        });
+
+        document.getElementById('backToRolesManager').addEventListener('click', () => {
+            document.getElementById('managerForm').classList.add('hidden');
+            document.querySelector('.login-options').style.display = 'grid';
+            document.getElementById('managerForm').reset();
+        });
+
+        document.getElementById('backToLogin').addEventListener('click', () => {
+            document.getElementById('changePasswordForm').classList.add('hidden');
+            document.getElementById('internForm').classList.remove('hidden');
+            document.getElementById('changePasswordForm').reset();
+        });
+
+        // Change Password Button
+        document.getElementById('changePasswordBtn').addEventListener('click', () => {
+            document.getElementById('internForm').classList.add('hidden');
+            document.getElementById('changePasswordForm').classList.remove('hidden');
+        });
+
+        // Form submissions
+        document.getElementById('internForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const bitsId = formData.get('bitsId');
+            const password = formData.get('password');
+
+            const intern = internCredentials.find(i => i.id === bitsId);
+            if (intern && (password === intern.password || password === sessionStorage.getItem(`password_${bitsId}`))) {
+                const userData = {
+                    id: bitsId,
+                    name: intern.name,
+                    role: 'intern'
+                };
+                auth.login(userData);
+                window.location.replace('intern.html');
+            } else {
+                alert('Invalid credentials. For first-time login, use the last 4 digits of your BITS ID as password.');
+            }
+        });
+
+        document.getElementById('managerForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const email = formData.get('email');
+            const password = formData.get('password');
+
+            if (email === managerCredentials.email && password === managerCredentials.password) {
+                const userData = {
+                    email,
+                    name: 'Kaushal',
+                    role: 'manager'
+                };
+                auth.login(userData);
+                window.location.replace('manager.html');
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        });
+
+        document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const bitsId = formData.get('bitsId');
+            const currentPassword = formData.get('currentPassword');
+            const newPassword = formData.get('newPassword');
+            const confirmPassword = formData.get('confirmPassword');
+
+            const intern = internCredentials.find(i => i.id === bitsId);
+            
+            if (!intern) {
+                alert('Invalid BITS ID');
+                return;
+            }
+
+            if (currentPassword !== intern.password && currentPassword !== sessionStorage.getItem(`password_${bitsId}`)) {
+                alert('Current password is incorrect');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('New password must be at least 8 characters long');
+                return;
+            }
+
+            // Store new password in session storage
+            sessionStorage.setItem(`password_${bitsId}`, newPassword);
+            alert('Password changed successfully!');
+            
+            // Return to login form
+            document.getElementById('changePasswordForm').classList.add('hidden');
+            document.getElementById('internForm').classList.remove('hidden');
+            document.getElementById('changePasswordForm').reset();
+        });
+    </script>
+</body>
+</html> 

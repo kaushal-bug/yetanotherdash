@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard - Slash Experiences</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #2CB67D;
+            --bg-color: #1e1e2e;
+            --card-bg: rgba(30, 30, 46, 0.9);
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #6366f1, #4f46e5, #2CB67D, #7F5AF0);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            margin-right: 1rem;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .team-member {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .team-member:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 1rem;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+            }
+
+            body {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="flex items-center mb-8">
+            <h2 class="text-xl font-bold">Slash Experiences</h2>
+        </div>
+        
+        <nav class="flex-1">
+            <div class="nav-item active" data-section="dashboard">
+                <i data-feather="grid"></i>
+                Dashboard
+            </div>
+            <div class="nav-item" data-section="team">
+                    <i data-feather="users"></i>
+                Team
+            </div>
+            <div class="nav-item" data-section="notices">
+                <i data-feather="message-square"></i>
+                Notice Board
+            </div>
+            <div class="nav-item" data-section="calendar">
+                    <i data-feather="calendar"></i>
+                    Calendar
+            </div>
+        </nav>
+
+        <div class="mt-auto pt-4 border-t border-gray-700">
+            <div class="text-sm text-gray-400 mb-2">Logged in as</div>
+            <div class="font-medium mb-4" id="userName">Manager</div>
+            <button onclick="auth.logout()" class="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors duration-300">
+                    Logout
+                </button>
+            </div>
+    </div>
+
+        <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">Total Tasks</h3>
+                    <p class="text-3xl font-bold">47</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">Completed</h3>
+                    <p class="text-3xl font-bold text-green-400">12</p>
+                    </div>
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">In Progress</h3>
+                    <p class="text-3xl font-bold text-blue-400">28</p>
+                    </div>
+                <div class="stats-card">
+                    <h3 class="text-lg mb-2 text-gray-400">Blocked</h3>
+                    <p class="text-3xl font-bold text-red-500">7</p>
+                </div>
+            </div>
+
+            <!-- Team Overview -->
+            <div class="dashboard-card">
+                <h2 class="text-2xl font-bold mb-6">Team Overview</h2>
+                <div class="space-y-6">
+                    <div class="team-member">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-lg">Product Development</h3>
+                            <span class="text-sm text-gray-400">12 members</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-2">AI Prompt Logic & Output Tuning</h4>
+                                <p class="text-sm text-gray-400 mb-2">Design and refine structured intake prompt + improve response quality</p>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Rishit Lavania</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Ananya Purwar</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Romir Shetty</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="check-circle" class="w-4 h-4 text-green-400"></i>
+                                        <span class="text-sm">Prompt system with 5 fields</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="clock" class="w-4 h-4 text-yellow-400"></i>
+                                        <span class="text-sm">Relevance score testing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-2">Experience Database + Tagging</h4>
+                                <p class="text-sm text-gray-400 mb-2">Build a structured, searchable database of experiences</p>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Aditya Asopa</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Honey Bhatia</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="loader" class="w-4 h-4 text-blue-400"></i>
+                                        <span class="text-sm">100+ experiences tagging in progress</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="code" class="w-4 h-4 text-indigo-400"></i>
+                                        <span class="text-sm">JSON/CMS structure development</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-2">Frontend & Full Stack Development</h4>
+                                <p class="text-sm text-gray-400 mb-2">Build functional UI and backend infrastructure</p>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Keerthika Muddada</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Anirudh</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Prithvish</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Amit Mishra</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="team-member">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-lg">Supplier Growth</h3>
+                            <span class="text-sm text-gray-400">2 members</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-2">Experience Curation & Partnerships</h4>
+                                <p class="text-sm text-gray-400 mb-2">Source and refine top-tier, giftable experiences</p>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Sajjad</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Honey Bhatia</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="target" class="w-4 h-4 text-purple-400"></i>
+                                        <span class="text-sm">100 experiences curation target</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="users" class="w-4 h-4 text-green-400"></i>
+                                        <span class="text-sm">10 provider partnerships goal</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="team-member">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-lg">Customer Growth</h3>
+                            <span class="text-sm text-gray-400">4 members</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-2">User Testing & Growth</h4>
+                                <p class="text-sm text-gray-400 mb-2">Validate concierge and drive user engagement</p>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Sidhant Subramanian</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Anush</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="users" class="w-4 h-4 text-yellow-400"></i>
+                                        <span class="text-sm">25 user testing target</span>
+                        </div>
+                    </div>
+                </div>
+
+                            <div class="bg-gray-800 bg-opacity-50 rounded-lg p-4">
+                                <h4 class="font-medium mb-2">Content & Social Media</h4>
+                                <p class="text-sm text-gray-400 mb-2">Create engaging content and manage social presence</p>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Anubhav</span>
+                                    <span class="text-xs bg-blue-500 bg-opacity-20 text-blue-300 px-2 py-1 rounded">Satvik</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="video" class="w-4 h-4 text-red-400"></i>
+                                        <span class="text-sm">2+ reels/demo videos</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i data-feather="trending-up" class="w-4 h-4 text-green-400"></i>
+                                        <span class="text-sm">1K+ views per video target</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Standup -->
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">Daily Standup</h2>
+                        <p class="text-sm text-gray-400">Daily standup meeting at 10:00 AM IST</p>
+                    </div>
+                    <a href="https://meet.google.com/xyz-abcd-efg" target="_blank" 
+                        class="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300">
+                        <i data-feather="video" class="w-4 h-4 mr-2"></i>
+                        Join Meet
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Section -->
+        <section id="team" class="content-section">
+            <div class="dashboard-card">
+                <h2 class="text-2xl font-bold mb-6">Team Members</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="team-member">
+                        <h3 class="font-bold mb-4">Frontend Team</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>KAUSHAL (2022A1PS0832P)</li>
+                            <li>AMIT MISHRA (2023B2AD0956H)</li>
+                            <li>SAJJAD AHMED KHAN (2023A3PS0181G)</li>
+                            <li>SIDHANT SUBRAMANIAN (2023A3PS0300H)</li>
+                            <li>ROMIR SHETTY (2023B4A70871G)</li>
+                            <li>JAGRUTH DODDA (2023A7PS2013H)</li>
+                            <li>ANANYA PURWAR (2023A7PS0017G)</li>
+                        </ul>
+                        </div>
+                    <div class="team-member">
+                        <h3 class="font-bold mb-4">Backend Team</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>KEERTHIKA MUDDADA (2023A7PS0010H)</li>
+                            <li>MOFASSER ARAFAT MIDDA (2023B1A80965H)</li>
+                            <li>SANVI RAJAN UDHAN (2023A4PS0817H)</li>
+                            <li>PRITHVISH CHANDRAYAN (2023A7PS0014P)</li>
+                            <li>SATVIK ADERLA (2023A7PS0167H)</li>
+                            <li>KOTA ANIRUDH (2023B4A30655H)</li>
+                            <li>ANUSH VISHNOI (2023AAPS0630G)</li>
+                        </ul>
+                    </div>
+                    <div class="team-member">
+                        <h3 class="font-bold mb-4">Design Team</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>ANOUSHKA SINGHI (2023A5PS1181P)</li>
+                            <li>NIKHIL KHEMANI (2023B3A10864G)</li>
+                            <li>ANUBHAV CHOURASIA (2023B4AA0939G)</li>
+                            <li>RISHIT LAVANIA (2023A7PS0446G)</li>
+                            <li>ADITYA ASOPA (2023A3PS1129G)</li>
+                            <li>ANUSHKA PURWAR (2023A5PS1173P)</li>
+                            <li>HONEY BHATIA (2023B1A30680G)</li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+            </section>
+
+        <!-- Notice Board Section -->
+        <section id="notices" class="content-section">
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Notice Board</h2>
+                    <div class="flex gap-2">
+                        <select id="noticeFilter" class="bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                            <option value="all">All Notices</option>
+                            <option value="blocker">#blocker</option>
+                            <option value="product">#product</option>
+                            <option value="announcement">#announcement</option>
+                            <option value="pinned">Pinned</option>
+                        </select>
+                        <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300" id="sendMessage">
+                            Send Message
+                        </button>
+                    </div>
+                </div>
+                <div class="notice-form hidden" id="noticeForm">
+                    <textarea class="w-full bg-transparent border border-gray-600 rounded-lg p-3 mb-4" 
+                        placeholder="Type your message here..."></textarea>
+                    <div class="flex gap-4 mb-4">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="pinNotice" class="rounded bg-transparent border-gray-600">
+                            <label for="pinNotice" class="text-sm">Pin to Top</label>
+                        </div>
+                        <select id="noticeTag" class="bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                            <option value="">Select Tag</option>
+                            <option value="blocker">#blocker</option>
+                            <option value="product">#product</option>
+                            <option value="announcement">#announcement</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors duration-300" id="cancelMessage">Cancel</button>
+                        <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white transition-colors duration-300" id="submitMessage">Send</button>
+                    </div>
+                </div>
+                <div class="notice-board max-h-96 overflow-y-auto space-y-4">
+                    <!-- Notices will be populated here -->
+                </div>
+                </div>
+            </section>
+
+            <!-- Calendar Section -->
+        <section id="calendar" class="content-section">
+            <div class="dashboard-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Calendar</h2>
+                    <div class="flex gap-2">
+                        <select id="teamFilter" class="bg-transparent border border-gray-600 rounded-lg px-3 py-1">
+                            <option value="all">All Teams</option>
+                            <option value="frontend">Frontend Team</option>
+                            <option value="backend">Backend Team</option>
+                            <option value="design">Design Team</option>
+                        </select>
+                        <button id="planTeamEvent" class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-500 transition-all duration-300">
+                            Plan Team Event
+                        </button>
+                        <button id="addEvent" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-500 transition-all duration-300">
+                            + Add Event
+                        </button>
+                    </div>
+                </div>
+
+                <!-- No Events Message -->
+                <div id="noEventsMessage" class="text-center text-gray-400 mb-6">
+                    No meetings or tasks scheduled today.
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="currentMonth" class="text-xl font-semibold">June 2024</h3>
+                        <div class="flex gap-2">
+                            <button id="prevMonth" class="p-2 hover:bg-gray-700 rounded-lg transition-all duration-300">
+                            <i data-feather="chevron-left"></i>
+                        </button>
+                            <button id="nextMonth" class="p-2 hover:bg-gray-700 rounded-lg transition-all duration-300">
+                            <i data-feather="chevron-right"></i>
+                        </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar Header -->
+                    <div class="grid grid-cols-7 gap-1 mb-2">
+                        <div class="text-center text-gray-400 py-2">Sun</div>
+                        <div class="text-center text-gray-400 py-2">Mon</div>
+                        <div class="text-center text-gray-400 py-2">Tue</div>
+                        <div class="text-center text-gray-400 py-2">Wed</div>
+                        <div class="text-center text-gray-400 py-2">Thu</div>
+                        <div class="text-center text-gray-400 py-2">Fri</div>
+                        <div class="text-center text-gray-400 py-2">Sat</div>
+                    </div>
+                    
+                    <!-- Calendar Days -->
+                    <div id="calendarDays" class="grid grid-cols-7 gap-1">
+                        <!-- Days will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                <!-- Upcoming Events -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold mb-4">Upcoming Events</h3>
+                    <div id="upcomingEvents" class="space-y-4">
+                        <!-- Events will be populated here -->
+                        <div class="text-center text-gray-400 py-8">
+                            🎉 You're all caught up!
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+            <!-- Add Event Modal -->
+            <div id="addEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold">Add Event</h3>
+                        <button class="close-modal text-gray-400 hover:text-white">
+                            <i data-feather="x"></i>
+                        </button>
+                    </div>
+                    <form id="addEventForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Event Title</label>
+                            <input type="text" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Date & Time</label>
+                            <input type="datetime-local" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                            </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Description</label>
+                            <textarea class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" rows="3"></textarea>
+                                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Meeting Link (optional)</label>
+                            <input type="url" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2">
+                            </div>
+                        <div class="flex justify-end gap-2 mt-6">
+                            <button type="button" class="close-modal px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-all duration-300">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-all duration-300">
+                                Add Event
+                            </button>
+                        </div>
+                    </form>
+                </div>
+    </div>
+
+            <!-- Plan Team Event Modal -->
+            <div id="planTeamEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+                <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-semibold">Plan Team Event</h3>
+                        <button class="close-modal text-gray-400 hover:text-white">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+                    <form id="planTeamEventForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Event Title</label>
+                            <input type="text" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Team</label>
+                            <select class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                                <option value="frontend">Frontend Team</option>
+                                <option value="backend">Backend Team</option>
+                                <option value="design">Design Team</option>
+                                <option value="all">All Teams</option>
+                    </select>
+                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Date & Time</label>
+                            <input type="datetime-local" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Description</label>
+                            <textarea class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" rows="3"></textarea>
+                </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Meeting Link</label>
+                            <input type="url" class="w-full bg-transparent border border-gray-600 rounded-lg px-3 py-2" required>
+                </div>
+                        <div class="flex justify-end gap-2 mt-6">
+                            <button type="button" class="close-modal px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-all duration-300">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-all duration-300">
+                                Schedule Event
+                            </button>
+                </div>
+            </form>
+        </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+
+        // Navigation
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.content-section');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const sectionId = item.dataset.section;
+                
+                // Remove active class from all items and sections
+                navItems.forEach(nav => nav.classList.remove('active'));
+                sections.forEach(section => section.classList.remove('active'));
+                
+                // Add active class to clicked item and corresponding section
+                item.classList.add('active');
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // Notice board functionality
+        const sendMessageBtn = document.getElementById('sendMessage');
+        const noticeForm = document.getElementById('noticeForm');
+        const cancelMessageBtn = document.getElementById('cancelMessage');
+        const submitMessageBtn = document.getElementById('submitMessage');
+        const noticeBoard = document.querySelector('.notice-board');
+
+        if (sendMessageBtn && noticeForm && cancelMessageBtn && submitMessageBtn && noticeBoard) {
+            sendMessageBtn.addEventListener('click', () => {
+                noticeForm.classList.remove('hidden');
+            });
+
+            cancelMessageBtn.addEventListener('click', () => {
+                noticeForm.classList.add('hidden');
+                noticeForm.querySelector('textarea').value = '';
+            });
+
+            submitMessageBtn.addEventListener('click', () => {
+                const messageText = noticeForm.querySelector('textarea').value.trim();
+                const isPinned = document.getElementById('pinNotice').checked;
+                const tag = document.getElementById('noticeTag').value;
+                
+                if (messageText) {
+                    const notice = document.createElement('div');
+                    notice.className = `p-4 border border-gray-700 rounded-lg ${isPinned ? 'bg-opacity-20 bg-indigo-900' : ''}`;
+                    notice.dataset.tag = tag;
+                    notice.dataset.pinned = isPinned;
+                    
+                    notice.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <p class="font-medium">${user?.name || 'Manager'}</p>
+                                    ${isPinned ? '<span class="text-xs bg-indigo-500 px-2 py-0.5 rounded">📌 Pinned</span>' : ''}
+                                    ${tag ? `<span class="text-xs bg-gray-700 px-2 py-0.5 rounded">#${tag}</span>` : ''}
+                                </div>
+                                <p class="text-sm text-gray-400">${new Date().toLocaleString()}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button class="acknowledge-btn text-sm text-gray-400 hover:text-white">
+                                    <i data-feather="check-circle"></i> <span class="ack-count">0</span>
+                                </button>
+                                <button class="reply-btn text-sm text-gray-400 hover:text-white">
+                                    <i data-feather="message-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p>${messageText}</p>
+                        <div class="replies mt-4 space-y-2 hidden"></div>
+                    `;
+                    
+                    // Insert pinned notices at the top
+                    if (isPinned) {
+                        noticeBoard.insertBefore(notice, noticeBoard.firstChild);
+                    } else {
+                        const firstNonPinned = Array.from(noticeBoard.children).find(child => !child.dataset.pinned);
+                        if (firstNonPinned) {
+                            noticeBoard.insertBefore(notice, firstNonPinned);
+                        } else {
+                            noticeBoard.appendChild(notice);
+                        }
+                    }
+                    
+                    // Initialize Feather icons for the new notice
+                    feather.replace();
+                    
+                    // Reset form
+                    noticeForm.classList.add('hidden');
+                    noticeForm.querySelector('textarea').value = '';
+                    document.getElementById('pinNotice').checked = false;
+                    document.getElementById('noticeTag').value = '';
+                }
+            });
+        }
+
+        // Load user data
+        const user = auth.getCurrentUser();
+        if (user) {
+            document.getElementById('userName').textContent = user.name;
+        }
+
+        // Check authentication
+        if (!auth.isAuthenticated() || auth.getCurrentUser().role !== 'manager') {
+            window.location.replace('login.html');
+        }
+
+        // Add notice filtering
+        document.getElementById('noticeFilter').addEventListener('change', (e) => {
+            const filter = e.target.value;
+            const notices = noticeBoard.children;
+            
+            Array.from(notices).forEach(notice => {
+                if (filter === 'all' || 
+                    (filter === 'pinned' && notice.dataset.pinned === 'true') ||
+                    notice.dataset.tag === filter) {
+                    notice.style.display = '';
+                } else {
+                    notice.style.display = 'none';
+                }
+            });
+        });
+
+        // Add event delegation for acknowledge and reply buttons
+        noticeBoard.addEventListener('click', (e) => {
+            if (e.target.closest('.acknowledge-btn')) {
+                const btn = e.target.closest('.acknowledge-btn');
+                const countSpan = btn.querySelector('.ack-count');
+                let count = parseInt(countSpan.textContent);
+                countSpan.textContent = count + 1;
+                btn.classList.add('text-green-400');
+            }
+            
+            if (e.target.closest('.reply-btn')) {
+                const notice = e.target.closest('.p-4');
+                const repliesSection = notice.querySelector('.replies');
+                repliesSection.classList.toggle('hidden');
+                
+                if (!repliesSection.querySelector('.reply-input')) {
+                    const replyInput = document.createElement('div');
+                    replyInput.className = 'flex gap-2';
+                    replyInput.innerHTML = `
+                        <input type="text" class="reply-input flex-1 bg-transparent border border-gray-600 rounded-lg px-3 py-1" placeholder="Write a reply...">
+                        <button class="send-reply px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white">Send</button>
+                    `;
+                    repliesSection.appendChild(replyInput);
+                }
+            }
+        });
+
+        // Handle reply submission
+        noticeBoard.addEventListener('click', (e) => {
+            if (e.target.classList.contains('send-reply')) {
+                const replyInput = e.target.previousElementSibling;
+                const replyText = replyInput.value.trim();
+                
+                if (replyText) {
+                    const reply = document.createElement('div');
+                    reply.className = 'pl-4 border-l border-gray-700';
+                    reply.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium text-sm">${user?.name || 'Manager'}</p>
+                                <p class="text-xs text-gray-400">${new Date().toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <p class="text-sm mt-1">${replyText}</p>
+                    `;
+                    
+                    const repliesSection = e.target.closest('.replies');
+                    repliesSection.insertBefore(reply, e.target.parentElement);
+                    replyInput.value = '';
+                }
+            }
+        });
+
+        // Calendar functionality
+        function initializeCalendar() {
+            const today = new Date();
+            let currentMonth = today.getMonth();
+            let currentYear = today.getFullYear();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            
+            function updateCalendar() {
+                const firstDay = new Date(currentYear, currentMonth, 1);
+                const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                const startingDay = firstDay.getDay();
+                const totalDays = lastDay.getDate();
+                
+                document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                const calendarDays = document.getElementById('calendarDays');
+                calendarDays.innerHTML = '';
+                
+                // Add empty cells for days before the first day of the month
+                for (let i = 0; i < startingDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'h-24 bg-gray-800 bg-opacity-50 rounded-lg';
+                    calendarDays.appendChild(emptyDay);
+                }
+                
+                // Add days of the month
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'h-24 bg-gray-800 bg-opacity-50 rounded-lg p-2 transition-all duration-300 hover:bg-opacity-70';
+                    
+                    // Check if this is today
+                    const isToday = today.getDate() === day && 
+                                   today.getMonth() === currentMonth && 
+                                   today.getFullYear() === currentYear;
+                    
+                    if (isToday) {
+                        dayCell.classList.add('bg-blue-600', 'bg-opacity-50');
+                    }
+                    
+                    dayCell.innerHTML = `
+                        <div class="flex justify-between">
+                            <span class="${isToday ? 'text-white font-bold' : ''}">${day}</span>
+                            <button class="add-event-btn hidden text-blue-400 hover:text-blue-300">
+                                <i data-feather="plus-circle" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div class="event-dots mt-1 flex gap-1"></div>
+                    `;
+                    
+                    dayCell.addEventListener('mouseenter', () => {
+                        dayCell.querySelector('.add-event-btn').classList.remove('hidden');
+                    });
+                    
+                    dayCell.addEventListener('mouseleave', () => {
+                        dayCell.querySelector('.add-event-btn').classList.add('hidden');
+                    });
+                    
+                    calendarDays.appendChild(dayCell);
+                }
+                
+                // Initialize Feather icons for the new elements
+                feather.replace();
+            }
+            
+            // Initialize calendar
+            updateCalendar();
+            
+            // Add event listeners for month navigation
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar();
+            });
+            
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar();
+            });
+        }
+
+        // Modal functionality
+        function initializeModals() {
+            const addEventModal = document.getElementById('addEventModal');
+            const planTeamEventModal = document.getElementById('planTeamEventModal');
+            
+            // Add Event button
+            document.getElementById('addEvent').addEventListener('click', () => {
+                addEventModal.classList.remove('hidden');
+                addEventModal.classList.add('flex');
+            });
+            
+            // Plan Team Event button
+            document.getElementById('planTeamEvent').addEventListener('click', () => {
+                planTeamEventModal.classList.remove('hidden');
+                planTeamEventModal.classList.add('flex');
+            });
+            
+            // Close buttons
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', () => {
+                    addEventModal.classList.add('hidden');
+                    addEventModal.classList.remove('flex');
+                    planTeamEventModal.classList.add('hidden');
+                    planTeamEventModal.classList.remove('flex');
+                });
+            });
+            
+            // Close on outside click
+            [addEventModal, planTeamEventModal].forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }
+                });
+            });
+        }
+
+        // Initialize calendar and modals when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCalendar();
+            initializeModals();
+        });
+    </script>
+</body>
+</html> 
